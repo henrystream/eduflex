@@ -1,0 +1,215 @@
+version: "3.9"
+
+services:
+  # ============================
+  # DATABASES
+  # ============================
+
+  auth-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: authdb
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+
+  school-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: schooldb
+    volumes:
+      - school_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  student-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: studentdb
+    volumes:
+      - student_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  financing-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: financingdb
+    volumes:
+      - financing_data:/var/lib/postgresql/data
+
+  disbursement-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: disbursementdb
+    volumes:
+      - disbursement_data:/var/lib/postgresql/data
+
+  loan-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: loandb
+    volumes:
+      - loan_data:/var/lib/postgresql/data
+
+  ledger-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ledgerdb
+    volumes:
+      - ledger_data:/var/lib/postgresql/data
+
+  events-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: eventsdb
+    volumes:
+      - events_data:/var/lib/postgresql/data
+
+  # ============================
+  # CORE SERVICES
+  # ============================
+
+  auth-service:
+    build: ./auth-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@auth-db:5432/authdb?sslmode=disable
+      JWT_SECRET: supersecretkey
+    depends_on:
+      - auth-db
+    ports:
+      - "8083:8080"
+
+  school-service:
+    build: ./school-service
+    environment:
+      DATABASE_URL: postgres://postgres:password@school-db:5432/schooldb?sslmode=disable
+    depends_on:
+      - school-db
+    ports:
+      - "8081:8080"
+
+  student-service:
+    build: ./student-service
+    environment:
+      DATABASE_URL: postgres://postgres:password@student-db:5432/studentdb?sslmode=disable
+    depends_on:
+      - student-db
+    ports:
+      - "8082:8080"
+
+  financing-service:
+    build: ./financing-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@financing-db:5432/financingdb?sslmode=disable
+    depends_on:
+      - financing-db
+
+  disbursement-service:
+    build: ./disbursement-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@disbursement-db:5432/disbursementdb?sslmode=disable
+    depends_on:
+      - disbursement-db
+
+  loan-service:
+    build: ./loan-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@loan-db:5432/loandb?sslmode=disable
+    depends_on:
+      - loan-db
+
+  ledger-service:
+    build: ./ledger-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@ledger-db:5432/ledgerdb?sslmode=disable
+    depends_on:
+      - ledger-db
+
+  events-service:
+    build: ./events-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@events-db:5432/eventsdb?sslmode=disable
+    depends_on:
+      - events-db
+
+  # ============================
+  # SUPPORT SERVICES
+  # ============================
+
+  scheduler-service:
+    build: ./scheduler-service
+    depends_on:
+      - financing-service
+      - student-service
+      - ledger-service
+
+  notification-service:
+    build: ./notification-service
+    environment:
+      SMS_API_KEY: dummy
+      EMAIL_API_KEY: dummy
+
+  reporting-service:
+    build: ./reporting-service
+    depends_on:
+      - school-service
+      - student-service
+      - financing-service
+      - loan-service
+      - ledger-service
+
+  # ============================
+  # API GATEWAY
+  # ============================
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      AUTH_URL: http://auth-service:8080
+      SCHOOL_URL: http://school-service:8080
+      STUDENT_URL: http://student-service:8080
+      FINANCING_URL: http://financing-service:8080
+      DISBURSEMENT_URL: http://disbursement-service:8080
+      LOAN_URL: http://loan-service:8080
+      LEDGER_URL: http://ledger-service:8080
+      EVENTS_URL: http://events-service:8080
+      JWT_SECRET: supersecretkey
+    depends_on:
+      - auth-service
+      - school-service
+      - student-service
+      - financing-service
+      - disbursement-service
+      - loan-service
+      - ledger-service
+      - events-service
+    ports:
+      - "8000:8000"
+
+volumes:
+  auth_data:
+  school_data:
+  student_data:
+  financing_data:
+  disbursement_data:
+  loan_data:
+  ledger_data:
+  events_data:
