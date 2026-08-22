@@ -66,5 +66,25 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		})
 	})
 
+	// ENROLLMENT ROUTES
+	r.Route("/enrollments", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "school", "student")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.StudentURL)
+		})
+		r.With(auth.RequireRoles("admin", "school", "student")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.StudentURL)
+		})
+	})
+
+	// PAYMENT ROUTES
+	r.Route("/payments", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "school", "student")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.StudentURL)
+		})
+		r.With(auth.RequireRoles("admin", "school", "student")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.StudentURL)
+		})
+	})
+
 	return r
 }
