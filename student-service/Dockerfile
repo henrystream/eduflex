@@ -4,8 +4,7 @@ FROM golang:1.26.5 AS builder
 WORKDIR /app
 
 # Cache modules
-#COPY go.mod go.sum ./
-COPY go.mod ./
+COPY go.mod go.sum ./
 
 RUN go mod download
 

@@ -109,7 +109,7 @@ services:
   student-service:
     build: ./student-service
     environment:
-      DATABASE_URL: postgres://postgres:password@student-db:5432/studentdb?sslmode=disable
+      DATABASE_URL: postgres://postgres:postgres@student-db:5432/studentdb?sslmode=disable
     depends_on:
       - student-db
     ports:

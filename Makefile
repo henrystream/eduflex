@@ -6,14 +6,28 @@
 #create-authdb-container:
 #	docker run -d --name eduflex-authdb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=authdb -p 5421:5432 -v postgres-data:/var/lib/postgresql postgres
 
+#create-studentdb-container:
+#	docker run -d --name eduflex-studentdb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=studentdb -p 5422:5432 -v postgres-data:/var/lib/postgresql postgres
+
 
 #start-postgres:
-#	docker start eduflex-postgres-container
+#	docker start eduflex-studentdb-container
+#	docker start eduflex-schooldb-container
+#	docker start eduflex-authdb-container
+
 #run-migrations:
+
+#---use this instead of the ones above
+#	docker compose up -d school-db
+#	docker compose up -d auth-db
+#	docker compose up -d student-db
+#	docker run --rm -v "$(CURDIR)/student-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5434/studentdb?sslmode=disable" up
+#	docker run --rm -v "$(CURDIR)/auth-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5435/authdb?sslmode=disable" up
+#	docker run --rm -v "$(CURDIR)/school-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5421/authdb?sslmode=disable" up
+
 #	docker exec -e PGPASSWORD=password eduflex-schooldb-container psql -U postgres -d postgres -c "CREATE DATABASE schooldb;"
-#	docker run --rm -v "$(CURDIR)/school-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5420/schooldb?sslmode=disable" up
-#	docker exec -e PGPASSWORD=password eduflex-authdb-container psql -U postgres -d postgres -c "CREATE DATABASE authdb;"
-#	docker run --rm -v "$(CURDIR)/auth-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5421/authdb?sslmode=disable" up
+
+
 
 #	
 #	docker run --rm -v "${PWD}/school-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5432/schooldb?sslmode=disable" up
@@ -33,7 +47,8 @@ run-app:
 
 	docker compose up -d --build api-gateway 
 	docker compose up -d --build auth-service
-	docker compose up -d --build api-gateway
+	docker compose up -d --build school-service
+	docker compose up -d --build student-service
 
 #stop-app:
 #	docker compose down
