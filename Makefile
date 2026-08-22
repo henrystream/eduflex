@@ -39,11 +39,6 @@ run-app:
 #	docker compose down
 
 # Push project updates to repository
-push-updates:
-	@read -p "Enter commit message: " msg; \
-	git add -A && \
-	git commit -m "$$msg" && \
-	git push
 
 # Push with a default message (optional)
 push-quick:

@@ -44,7 +44,9 @@ func (m *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
+
 			http.Error(w, "invalid token", http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
