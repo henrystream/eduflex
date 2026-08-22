@@ -7,6 +7,7 @@ type Config struct {
 	StudentURL string
 	AuthURL    string
 	Port       string
+	JWTSecret  string
 }
 
 func Load() Config {
@@ -15,6 +16,7 @@ func Load() Config {
 		StudentURL: getEnv("STUDENT_SERVICE_URL", "http://student-service:8080"),
 		AuthURL:    getEnv("AUTH_SERVICE_URL", "http://auth-service:8080"),
 		Port:       getEnv("PORT", "8000"),
+		JWTSecret:  os.Getenv("SECRET"),
 	}
 }
 
