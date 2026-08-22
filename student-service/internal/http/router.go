@@ -6,17 +6,32 @@ import (
 	"github.com/henrystream/eduflex/student-service/internal/service"
 )
 
-func NewRouter(svc *service.StudentService) *chi.Mux {
+func NewRouter(
+	studentSvc *service.StudentService,
+	enrollmentSvc *service.EnrollmentService,
+	paymentSvc *service.PaymentService,
+) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	h := NewStudentHandler(svc)
-
+	studentHandler := NewStudentHandler(studentSvc)
 	r.Route("/students", func(r chi.Router) {
-		r.Post("/", h.CreateStudent)
-		r.Get("/", h.ListStudents)
-		r.Get("/{id}", h.GetStudent)
+		r.Post("/", studentHandler.CreateStudent)
+		r.Get("/", studentHandler.ListStudents)
+		r.Get("/{id}", studentHandler.GetStudent)
+	})
+
+	enrollmentHandler := NewEnrollmentHandler(enrollmentSvc)
+	r.Route("/enrollments", func(r chi.Router) {
+		r.Post("/", enrollmentHandler.CreateEnrollment)
+		r.Get("/", enrollmentHandler.ListEnrollmentsByStudent)
+	})
+
+	paymentHandler := NewPaymentHandler(paymentSvc)
+	r.Route("/payments", func(r chi.Router) {
+		r.Post("/", paymentHandler.CreatePayment)
+		r.Get("/", paymentHandler.ListPaymentsByStudent)
 	})
 
 	return r

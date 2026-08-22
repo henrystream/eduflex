@@ -8,6 +8,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type FinancingAgreement struct {
+	ID           pgtype.UUID      `json:"id"`
+	StudentID    pgtype.UUID      `json:"student_id"`
+	InvoiceID    pgtype.UUID      `json:"invoice_id"`
+	Principal    pgtype.Numeric   `json:"principal"`
+	InterestRate pgtype.Numeric   `json:"interest_rate"`
+	ServiceFee   pgtype.Numeric   `json:"service_fee"`
+	TotalPayable pgtype.Numeric   `json:"total_payable"`
+	TermMonths   int32            `json:"term_months"`
+	StartDate    pgtype.Date      `json:"start_date"`
+	Status       string           `json:"status"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+}
+
+type MonthlyInstallment struct {
+	ID                pgtype.UUID      `json:"id"`
+	FinancingID       pgtype.UUID      `json:"financing_id"`
+	InstallmentNumber int32            `json:"installment_number"`
+	DueDate           pgtype.Date      `json:"due_date"`
+	Amount            pgtype.Numeric   `json:"amount"`
+	Status            string           `json:"status"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
+}
+
 type Student struct {
 	ID          pgtype.UUID        `json:"id"`
 	FirstName   string             `json:"first_name"`
@@ -16,4 +40,22 @@ type Student struct {
 	Email       string             `json:"email"`
 	Phone       pgtype.Text        `json:"phone"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type StudentPayment struct {
+	ID                   pgtype.UUID      `json:"id"`
+	InstallmentID        pgtype.UUID      `json:"installment_id"`
+	Amount               pgtype.Numeric   `json:"amount"`
+	PaidAt               pgtype.Timestamp `json:"paid_at"`
+	PaymentMethod        pgtype.Text      `json:"payment_method"`
+	TransactionReference pgtype.Text      `json:"transaction_reference"`
+}
+
+type StudentSchoolEnrollment struct {
+	ID             pgtype.UUID        `json:"id"`
+	StudentID      pgtype.UUID        `json:"student_id"`
+	SchoolID       pgtype.UUID        `json:"school_id"`
+	EnrollmentDate pgtype.Date        `json:"enrollment_date"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }

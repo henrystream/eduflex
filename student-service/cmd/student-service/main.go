@@ -29,9 +29,16 @@ func main() {
 	}
 
 	queries := db.New(conn)
-	repo := repository.NewStudentRepository(queries)
-	svc := service.NewStudentService(repo)
-	router := apphttp.NewRouter(svc)
+	studentRepo := repository.NewStudentRepository(queries)
+	studentSvc := service.NewStudentService(studentRepo)
+
+	enrollRepo := repository.NewEnrollmentRepository(queries)
+	enrollSvc := service.NewEnrollmentService(enrollRepo)
+
+	payRepo := repository.NewPaymentRepository(queries)
+	paySvc := service.NewPaymentService(payRepo)
+
+	router := apphttp.NewRouter(studentSvc, enrollSvc, paySvc)
 
 	log.Printf("student-service listening on :%s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {

@@ -11,6 +11,70 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createEnrollment = `-- name: CreateEnrollment :one
+INSERT INTO student_school_enrollments (student_id, school_id, enrollment_date, status)
+VALUES ($1, $2, $3, $4)
+RETURNING id, student_id, school_id, enrollment_date, status, created_at
+`
+
+type CreateEnrollmentParams struct {
+	StudentID      pgtype.UUID `json:"student_id"`
+	SchoolID       pgtype.UUID `json:"school_id"`
+	EnrollmentDate pgtype.Date `json:"enrollment_date"`
+	Status         string      `json:"status"`
+}
+
+func (q *Queries) CreateEnrollment(ctx context.Context, arg CreateEnrollmentParams) (StudentSchoolEnrollment, error) {
+	row := q.db.QueryRow(ctx, createEnrollment,
+		arg.StudentID,
+		arg.SchoolID,
+		arg.EnrollmentDate,
+		arg.Status,
+	)
+	var i StudentSchoolEnrollment
+	err := row.Scan(
+		&i.ID,
+		&i.StudentID,
+		&i.SchoolID,
+		&i.EnrollmentDate,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createPayment = `-- name: CreatePayment :one
+INSERT INTO student_payments (installment_id, amount, payment_method, transaction_reference)
+VALUES ($1, $2, $3, $4)
+RETURNING id, installment_id, amount, paid_at, payment_method, transaction_reference
+`
+
+type CreatePaymentParams struct {
+	InstallmentID        pgtype.UUID    `json:"installment_id"`
+	Amount               pgtype.Numeric `json:"amount"`
+	PaymentMethod        pgtype.Text    `json:"payment_method"`
+	TransactionReference pgtype.Text    `json:"transaction_reference"`
+}
+
+func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (StudentPayment, error) {
+	row := q.db.QueryRow(ctx, createPayment,
+		arg.InstallmentID,
+		arg.Amount,
+		arg.PaymentMethod,
+		arg.TransactionReference,
+	)
+	var i StudentPayment
+	err := row.Scan(
+		&i.ID,
+		&i.InstallmentID,
+		&i.Amount,
+		&i.PaidAt,
+		&i.PaymentMethod,
+		&i.TransactionReference,
+	)
+	return i, err
+}
+
 const createStudent = `-- name: CreateStudent :one
 INSERT INTO students (first_name, last_name, date_of_birth, email, phone)
 VALUES ($1, $2, $3, $4, $5)
@@ -46,6 +110,24 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (S
 	return i, err
 }
 
+const getEnrollment = `-- name: GetEnrollment :one
+SELECT id, student_id, school_id, enrollment_date, status, created_at FROM student_school_enrollments WHERE id = $1
+`
+
+func (q *Queries) GetEnrollment(ctx context.Context, id pgtype.UUID) (StudentSchoolEnrollment, error) {
+	row := q.db.QueryRow(ctx, getEnrollment, id)
+	var i StudentSchoolEnrollment
+	err := row.Scan(
+		&i.ID,
+		&i.StudentID,
+		&i.SchoolID,
+		&i.EnrollmentDate,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getStudent = `-- name: GetStudent :one
 SELECT id, first_name, last_name, date_of_birth, email, phone, created_at FROM students WHERE id = $1
 `
@@ -63,6 +145,74 @@ func (q *Queries) GetStudent(ctx context.Context, id pgtype.UUID) (Student, erro
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const listEnrollmentsByStudent = `-- name: ListEnrollmentsByStudent :many
+SELECT id, student_id, school_id, enrollment_date, status, created_at FROM student_school_enrollments WHERE student_id = $1 ORDER BY created_at DESC
+`
+
+func (q *Queries) ListEnrollmentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentSchoolEnrollment, error) {
+	rows, err := q.db.Query(ctx, listEnrollmentsByStudent, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StudentSchoolEnrollment
+	for rows.Next() {
+		var i StudentSchoolEnrollment
+		if err := rows.Scan(
+			&i.ID,
+			&i.StudentID,
+			&i.SchoolID,
+			&i.EnrollmentDate,
+			&i.Status,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPaymentsByStudent = `-- name: ListPaymentsByStudent :many
+SELECT p.id, p.installment_id, p.amount, p.paid_at, p.payment_method, p.transaction_reference
+FROM student_payments p
+JOIN monthly_installments mi ON mi.id = p.installment_id
+WHERE mi.financing_id IN (
+    SELECT id FROM financing_agreements WHERE student_id = $1
+)
+ORDER BY p.paid_at DESC
+`
+
+func (q *Queries) ListPaymentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentPayment, error) {
+	rows, err := q.db.Query(ctx, listPaymentsByStudent, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StudentPayment
+	for rows.Next() {
+		var i StudentPayment
+		if err := rows.Scan(
+			&i.ID,
+			&i.InstallmentID,
+			&i.Amount,
+			&i.PaidAt,
+			&i.PaymentMethod,
+			&i.TransactionReference,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listStudents = `-- name: ListStudents :many

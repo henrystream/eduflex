@@ -11,8 +11,13 @@ import (
 )
 
 type Querier interface {
+	CreateEnrollment(ctx context.Context, arg CreateEnrollmentParams) (StudentSchoolEnrollment, error)
+	CreatePayment(ctx context.Context, arg CreatePaymentParams) (StudentPayment, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (Student, error)
+	GetEnrollment(ctx context.Context, id pgtype.UUID) (StudentSchoolEnrollment, error)
 	GetStudent(ctx context.Context, id pgtype.UUID) (Student, error)
+	ListEnrollmentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentSchoolEnrollment, error)
+	ListPaymentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentPayment, error)
 	ListStudents(ctx context.Context) ([]Student, error)
 }
 
