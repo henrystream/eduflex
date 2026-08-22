@@ -1,29 +1,16 @@
 #start-docker:
 #	docker desktop restart
-#create-schooldb-container:
-#	docker run -d --name eduflex-schooldb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=schooldb -p 5420:5432 -v postgres-data:/var/lib/postgresql postgres
 
-#create-authdb-container:
-#	docker run -d --name eduflex-authdb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=authdb -p 5421:5432 -v postgres-data:/var/lib/postgresql postgres
+run-migrations:
 
-#create-studentdb-container:
-#	docker run -d --name eduflex-studentdb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=studentdb -p 5422:5432 -v postgres-data:/var/lib/postgresql postgres
-
-
-#start-postgres:
-#	docker start eduflex-studentdb-container
-#	docker start eduflex-schooldb-container
-#	docker start eduflex-authdb-container
-
-#run-migrations:
-
-#---use this instead of the ones above
 #	docker compose up -d school-db
 #	docker compose up -d auth-db
 #	docker compose up -d student-db
+
+#	docker run --rm -v "$(CURDIR)/school-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5433/schooldb?sslmode=disable" up
 #	docker run --rm -v "$(CURDIR)/student-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5434/studentdb?sslmode=disable" up
-#	docker run --rm -v "$(CURDIR)/auth-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5435/authdb?sslmode=disable" up
-#	docker run --rm -v "$(CURDIR)/school-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5421/authdb?sslmode=disable" up
+#	docker run --rm -v "$(CURDIR)/auth-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5435/authdb?sslmode=disable" up
+
 
 #	docker exec -e PGPASSWORD=password eduflex-schooldb-container psql -U postgres -d postgres -c "CREATE DATABASE schooldb;"
 
@@ -60,3 +47,21 @@ push-quick:
 	git add -A
 	git commit -m "Quick update: $(shell date '+%Y-%m-%d %H:%M:%S')"
 	git push
+
+
+
+
+
+#create-schooldb-container:
+#	docker run -d --name eduflex-schooldb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=schooldb -p 5420:5432 -v postgres-data:/var/lib/postgresql postgres
+
+#create-authdb-container:
+#	docker run -d --name eduflex-authdb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=authdb -p 5421:5432 -v postgres-data:/var/lib/postgresql postgres
+
+#create-studentdb-container:
+#	docker run -d --name eduflex-studentdb-container -e POSTGRES_PASSWORD=password -e POSTGRES_DB=studentdb -p 5422:5432 -v postgres-data:/var/lib/postgresql postgres
+
+#start-postgres:
+#	docker start eduflex-studentdb-container
+#	docker start eduflex-schooldb-container
+#	docker start eduflex-authdb-container
