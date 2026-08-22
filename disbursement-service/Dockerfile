@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 # Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o service ./cmd
+RUN CGO_ENABLED=0 GOOS=linux go build -o service ./cmd/disbursement-service
     
 # ---- Run Stage ----
 FROM alpine:3.19
