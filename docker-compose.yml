@@ -112,8 +112,8 @@ services:
       DATABASE_URL: postgres://postgres:postgres@student-db:5432/studentdb?sslmode=disable
     depends_on:
       - student-db
-    ports:
-      - "8082:8080"
+#    ports:
+#      - "8082:8080"
 
   financing-service:
     build: ./financing-service

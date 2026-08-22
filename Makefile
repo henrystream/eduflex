@@ -1,7 +1,7 @@
 #start-docker:
 #	docker desktop restart
 
-run-migrations:
+#run-migrations:
 
 #	docker compose up -d school-db
 #	docker compose up -d auth-db
