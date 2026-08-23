@@ -6,10 +6,12 @@
 #	docker compose up -d school-db
 #	docker compose up -d auth-db
 #	docker compose up -d student-db
+#	docker compose up -d financing-db
 
 #	docker run --rm -v "$(CURDIR)/school-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5433/schooldb?sslmode=disable" up
 #	docker run --rm -v "$(CURDIR)/student-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5434/studentdb?sslmode=disable" up
 #	docker run --rm -v "$(CURDIR)/auth-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5435/authdb?sslmode=disable" up
+#	docker run --rm -v "$(CURDIR)/financing-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5436/financingdb?sslmode=disable" up
 
 
 #	docker exec -e PGPASSWORD=password eduflex-schooldb-container psql -U postgres -d postgres -c "CREATE DATABASE schooldb;"
@@ -36,6 +38,7 @@ run-app:
 	docker compose up -d --build auth-service
 	docker compose up -d --build school-service
 	docker compose up -d --build student-service
+	docker compose up -d --build financing-service
 
 #stop-app:
 #	docker compose down

@@ -46,6 +46,8 @@ services:
       POSTGRES_DB: financingdb
     volumes:
       - financing_data:/var/lib/postgresql/data
+    ports:
+    - "5436:5432"
 
   disbursement-db:
     image: postgres:15
