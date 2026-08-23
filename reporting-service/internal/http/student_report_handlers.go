@@ -16,6 +16,10 @@ func NewStudentReportHandler(svc *service.StudentReportService) *StudentReportHa
 
 func (h *StudentReportHandler) GetStudentLoanSummary(w http.ResponseWriter, r *http.Request) {
 	studentID := r.URL.Query().Get("student_id")
+	if studentID == "" {
+		http.Error(w, "student_id query parameter is required", http.StatusBadRequest)
+		return
+	}
 
 	report, err := h.svc.GenerateStudentLoanSummary(studentID)
 	if err != nil {

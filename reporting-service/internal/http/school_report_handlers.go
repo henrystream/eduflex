@@ -16,6 +16,10 @@ func NewSchoolReportHandler(svc *service.SchoolReportService) *SchoolReportHandl
 
 func (h *SchoolReportHandler) GetSchoolStatement(w http.ResponseWriter, r *http.Request) {
 	schoolID := r.URL.Query().Get("school_id")
+	if schoolID == "" {
+		http.Error(w, "school_id query parameter is required", http.StatusBadRequest)
+		return
+	}
 
 	report, err := h.svc.GenerateSchoolStatement(schoolID)
 	if err != nil {
