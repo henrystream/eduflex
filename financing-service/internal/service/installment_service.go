@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"math/big"
-	"time"
 
 	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
 	"github.com/henrystream/eduflex/financing-service/internal/repository"
@@ -20,24 +20,37 @@ func NewInstallmentService(r *repository.InstallmentRepository) *InstallmentServ
 }
 
 func (s *InstallmentService) GenerateInstallments(ctx context.Context, agreement db.FinancingAgreement) error {
-	total, _ := new(big.Float).SetString(agreement.TotalPayable.InfinityModifier.String())
+	total, err := numericToBigFloat(agreement.TotalPayable)
+	if err != nil {
+		return err
+	}
 	months := agreement.TermMonths
+	if months <= 0 {
+		return errors.New("term_months must be greater than zero")
+	}
 
 	monthly := new(big.Float).Quo(total, big.NewFloat(float64(months)))
 	monthlyStr := monthly.Text('f', 2)
 	var ms pgtype.Numeric
-	ms.Scan(monthlyStr)
+	if err := ms.Scan(monthlyStr); err != nil {
+		return err
+	}
 
-	start, _ := time.Parse("2006-01-02", agreement.StartDate.Time.String())
+	if !agreement.StartDate.Valid {
+		return errors.New("start_date is required")
+	}
+	start := agreement.StartDate.Time
 
 	for i := int32(1); i <= months; i++ {
 		due := start.AddDate(0, int(i), 0)
-		var duedate pgtype.Date
-		duedate.Scan(due)
+		var dueDate pgtype.Date
+		if err := dueDate.Scan(due); err != nil {
+			return err
+		}
 		_, err := s.repo.CreateInstallment(ctx, repository.CreateInstallmentParams{
 			FinancingID:       agreement.ID,
 			InstallmentNumber: i,
-			DueDate:           duedate, //due.Format("2006-01-02"),
+			DueDate:           dueDate,
 			Amount:            ms,
 			Status:            "PENDING",
 		})

@@ -33,10 +33,22 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 	if req.StudentID.String() == "" || req.InvoiceID.String() == "" {
 		return db.FinancingAgreement{}, errors.New("student_id and invoice_id required")
 	}
+	if req.TermMonths <= 0 {
+		return db.FinancingAgreement{}, errors.New("term_months must be greater than zero")
+	}
 
-	principal, _ := new(big.Float).SetString(req.Principal.InfinityModifier.String())
-	interestRate, _ := new(big.Float).SetString(req.InterestRate.InfinityModifier.String())
-	serviceFee, _ := new(big.Float).SetString(req.ServiceFee.InfinityModifier.String())
+	principal, err := numericToBigFloat(req.Principal)
+	if err != nil {
+		return db.FinancingAgreement{}, errors.New("invalid principal")
+	}
+	interestRate, err := numericToBigFloat(req.InterestRate)
+	if err != nil {
+		return db.FinancingAgreement{}, errors.New("invalid interest_rate")
+	}
+	serviceFee, err := numericToBigFloat(req.ServiceFee)
+	if err != nil {
+		return db.FinancingAgreement{}, errors.New("invalid service_fee")
+	}
 
 	// Calculate interest
 	interest := new(big.Float).Mul(principal, interestRate)
@@ -48,7 +60,9 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 	totalPayableStr := totalPayable.Text('f', 2)
 
 	var tp pgtype.Numeric
-	tp.Scan(totalPayableStr)
+	if err := tp.Scan(totalPayableStr); err != nil {
+		return db.FinancingAgreement{}, err
+	}
 
 	agreement, err := s.repo.CreateAgreement(ctx, repository.CreateAgreementParams{
 		StudentID:    req.StudentID,

@@ -11,15 +11,13 @@ func NewRouter(agreementsvc *service.AgreementService, installmentsvc *service.I
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	ah := NewAgreementHandler(agreementsvc)
-	ih := NewInstallmentHandler(installmentsvc)
-
+	agreementsHandler := NewAgreementHandler(agreementsvc)
 	r.Route("/agreements", func(r chi.Router) {
-		r.Post("/", ah.CreateAgreement)
+		r.Post("/", agreementsHandler.CreateAgreement)
 	})
-
+	installmentHandler := NewInstallmentHandler(installmentsvc)
 	r.Route("/installments", func(r chi.Router) {
-		r.Get("/", ih.ListInstallments)
+		r.Get("/", installmentHandler.ListInstallments)
 	})
 
 	return r
