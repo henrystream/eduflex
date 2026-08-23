@@ -66,6 +66,8 @@ services:
       POSTGRES_DB: loandb
     volumes:
       - loan_data:/var/lib/postgresql/data
+    ports:
+      - "5437:5432"
 
   ledger-db:
     image: postgres:15

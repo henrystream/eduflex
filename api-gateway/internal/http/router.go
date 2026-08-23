@@ -99,5 +99,42 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		})
 	})
 
+	// LOAN ROUTES
+	r.Route("/banks", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "finance")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+		r.With(auth.RequireRoles("admin", "finance")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+	})
+
+	r.Route("/facilities", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "finance")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+		r.With(auth.RequireRoles("admin", "finance")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+	})
+
+	r.Route("/drawdowns", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "finance")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+		r.With(auth.RequireRoles("admin", "finance")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+	})
+
+	r.Route("/repayments", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "finance")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+		r.With(auth.RequireRoles("admin", "finance")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.LoanURL)
+		})
+	})
+
 	return r
 }
