@@ -12,11 +12,16 @@ import (
 )
 
 type InstallmentService struct {
-	repo *repository.InstallmentRepository
+	repo   *repository.InstallmentRepository
+	ledger LedgerClient
 }
 
-func NewInstallmentService(r *repository.InstallmentRepository) *InstallmentService {
-	return &InstallmentService{repo: r}
+func NewInstallmentService(r *repository.InstallmentRepository, ledger ...LedgerClient) *InstallmentService {
+	var ledgerClient LedgerClient
+	if len(ledger) > 0 {
+		ledgerClient = ledger[0]
+	}
+	return &InstallmentService{repo: r, ledger: ledgerClient}
 }
 
 func (s *InstallmentService) GenerateInstallments(ctx context.Context, agreement db.FinancingAgreement) error {
@@ -47,7 +52,7 @@ func (s *InstallmentService) GenerateInstallments(ctx context.Context, agreement
 		if err := dueDate.Scan(due); err != nil {
 			return err
 		}
-		_, err := s.repo.CreateInstallment(ctx, repository.CreateInstallmentParams{
+		installment, err := s.repo.CreateInstallment(ctx, repository.CreateInstallmentParams{
 			FinancingID:       agreement.ID,
 			InstallmentNumber: i,
 			DueDate:           dueDate,
@@ -56,6 +61,22 @@ func (s *InstallmentService) GenerateInstallments(ctx context.Context, agreement
 		})
 		if err != nil {
 			return err
+		}
+
+		if s.ledger != nil {
+			_ = s.ledger.CreateEntry(LedgerEntryRequest{
+				EventType:     "INSTALLMENT",
+				EventID:       installment.ID,
+				SourceService: "financing-service",
+				DebitAccount:  "Accounts Receivable - Installments",
+				CreditAccount: "Installment Revenue",
+				Amount:        installment.Amount,
+				Currency:      "AED",
+				OccurredAt: pgtype.Timestamptz{
+					Time:  installment.DueDate.Time,
+					Valid: installment.DueDate.Valid,
+				},
+			})
 		}
 	}
 

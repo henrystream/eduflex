@@ -7,16 +7,37 @@ import (
 
 	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
 	"github.com/henrystream/eduflex/financing-service/internal/repository"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AgreementService struct {
 	repo         *repository.AgreementRepository
 	installments *InstallmentService
+	ledger       LedgerClient
 }
 
-func NewAgreementService(r *repository.AgreementRepository, i *InstallmentService) *AgreementService {
-	return &AgreementService{repo: r, installments: i}
+type LedgerClient interface {
+	CreateEntry(req LedgerEntryRequest) error
+}
+
+type LedgerEntryRequest struct {
+	EventType     string             `json:"event_type"`
+	EventID       pgtype.UUID        `json:"event_id"`
+	SourceService string             `json:"source_service"`
+	DebitAccount  string             `json:"debit_account"`
+	CreditAccount string             `json:"credit_account"`
+	Amount        pgtype.Numeric     `json:"amount"`
+	Currency      string             `json:"currency"`
+	OccurredAt    pgtype.Timestamptz `json:"occurred_at"`
+}
+
+func NewAgreementService(r *repository.AgreementRepository, i *InstallmentService, ledger ...LedgerClient) *AgreementService {
+	var ledgerClient LedgerClient
+	if len(ledger) > 0 {
+		ledgerClient = ledger[0]
+	}
+	return &AgreementService{repo: r, installments: i, ledger: ledgerClient}
 }
 
 type CreateAgreementRequest struct {
@@ -83,6 +104,22 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 	err = s.installments.GenerateInstallments(ctx, agreement)
 	if err != nil {
 		return db.FinancingAgreement{}, err
+	}
+
+	if s.ledger != nil {
+		_ = s.ledger.CreateEntry(LedgerEntryRequest{
+			EventType:     "FINANCING_AGREEMENT",
+			EventID:       agreement.ID,
+			SourceService: "financing-service",
+			DebitAccount:  "Accounts Receivable - Student",
+			CreditAccount: "Financing Principal",
+			Amount:        agreement.Principal,
+			Currency:      "AED",
+			OccurredAt: pgtype.Timestamptz{
+				Time:  agreement.StartDate.Time,
+				Valid: agreement.StartDate.Valid,
+			},
+		})
 	}
 
 	return agreement, nil

@@ -10,11 +10,31 @@ import (
 )
 
 type PaymentService struct {
-	repo *repository.PaymentRepository
+	repo   *repository.PaymentRepository
+	ledger LedgerClient
 }
 
-func NewPaymentService(r *repository.PaymentRepository) *PaymentService {
-	return &PaymentService{repo: r}
+type LedgerClient interface {
+	CreateEntry(req LedgerEntryRequest) error
+}
+
+type LedgerEntryRequest struct {
+	EventType     string             `json:"event_type"`
+	EventID       pgtype.UUID        `json:"event_id"`
+	SourceService string             `json:"source_service"`
+	DebitAccount  string             `json:"debit_account"`
+	CreditAccount string             `json:"credit_account"`
+	Amount        pgtype.Numeric     `json:"amount"`
+	Currency      string             `json:"currency"`
+	OccurredAt    pgtype.Timestamptz `json:"occurred_at"`
+}
+
+func NewPaymentService(r *repository.PaymentRepository, ledger ...LedgerClient) *PaymentService {
+	var ledgerClient LedgerClient
+	if len(ledger) > 0 {
+		ledgerClient = ledger[0]
+	}
+	return &PaymentService{repo: r, ledger: ledgerClient}
 }
 
 type CreatePaymentRequest struct {
@@ -25,16 +45,37 @@ type CreatePaymentRequest struct {
 }
 
 func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentRequest) (db.StudentPayment, error) {
-	if req.InstallmentID.String() == "" || req.Amount.InfinityModifier.String() == "" {
+	if req.InstallmentID.String() == "" || !req.Amount.Valid {
 		return db.StudentPayment{}, errors.New("installment_id and amount required")
 	}
 
-	return s.repo.CreatePayment(ctx, repository.CreatePaymentParams{
+	payment, err := s.repo.CreatePayment(ctx, repository.CreatePaymentParams{
 		InstallmentID:        req.InstallmentID,
 		Amount:               req.Amount,
 		PaymentMethod:        req.PaymentMethod,
 		TransactionReference: req.TransactionReference,
 	})
+	if err != nil {
+		return db.StudentPayment{}, err
+	}
+
+	if s.ledger != nil {
+		_ = s.ledger.CreateEntry(LedgerEntryRequest{
+			EventType:     "STUDENT_PAYMENT",
+			EventID:       payment.ID,
+			SourceService: "student-service",
+			DebitAccount:  "Cash - Bank",
+			CreditAccount: "Accounts Receivable - Student",
+			Amount:        payment.Amount,
+			Currency:      "AED",
+			OccurredAt: pgtype.Timestamptz{
+				Time:  payment.PaidAt.Time,
+				Valid: payment.PaidAt.Valid,
+			},
+		})
+	}
+
+	return payment, nil
 }
 
 func (s *PaymentService) ListPaymentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]db.StudentPayment, error) {

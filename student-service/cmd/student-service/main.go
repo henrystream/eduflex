@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"os"
 
 	apphttp "github.com/henrystream/eduflex/student-service/internal/http"
 
@@ -14,6 +18,27 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 )
+
+type ledgerClient struct {
+	baseURL string
+}
+
+func (c ledgerClient) CreateEntry(req service.LedgerEntryRequest) error {
+	body, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(c.baseURL+"/ledger", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= http.StatusBadRequest {
+		return errors.New(resp.Status)
+	}
+	return nil
+}
 
 func main() {
 	cfg := config.Load()
@@ -28,6 +53,12 @@ func main() {
 		log.Fatalf("failed to ping db: %v", err)
 	}
 
+	ledgerURL := os.Getenv("LEDGER_URL")
+	if ledgerURL == "" {
+		ledgerURL = "http://ledger-service:8080"
+	}
+	ledger := ledgerClient{baseURL: ledgerURL}
+
 	queries := db.New(conn)
 	studentRepo := repository.NewStudentRepository(queries)
 	studentSvc := service.NewStudentService(studentRepo)
@@ -36,7 +67,7 @@ func main() {
 	enrollSvc := service.NewEnrollmentService(enrollRepo)
 
 	payRepo := repository.NewPaymentRepository(queries)
-	paySvc := service.NewPaymentService(payRepo)
+	paySvc := service.NewPaymentService(payRepo, ledger)
 
 	router := apphttp.NewRouter(studentSvc, enrollSvc, paySvc)
 
