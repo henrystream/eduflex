@@ -136,5 +136,15 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		})
 	})
 
+	// DISBURSEMENT ROUTES
+	r.Route("/disbursements", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "finance", "school")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.DisbursementURL)
+		})
+		r.With(auth.RequireRoles("admin", "finance", "school")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.DisbursementURL)
+		})
+	})
+
 	return r
 }

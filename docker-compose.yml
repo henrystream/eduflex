@@ -57,7 +57,8 @@ services:
       POSTGRES_DB: disbursementdb
     volumes:
       - disbursement_data:/var/lib/postgresql/data
-
+    ports:
+      - "5439:5432"
   loan-db:
     image: postgres:15
     environment:
