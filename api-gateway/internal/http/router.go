@@ -146,5 +146,23 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		})
 	})
 
+	// REPORTING ROUTES
+	r.Route("/reports", func(r chi.Router) {
+		// Admin, finance, school can access school reports
+		r.With(auth.RequireRoles("admin", "finance", "school")).Get("/school", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.ReportingURL)
+		})
+
+		// Admin, finance, student can access student reports
+		r.With(auth.RequireRoles("admin", "finance", "student")).Get("/student", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.ReportingURL)
+		})
+
+		// Only admin and finance can access financial reports
+		r.With(auth.RequireRoles("admin", "finance")).Get("/financial", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.ReportingURL)
+		})
+	})
+
 	return r
 }

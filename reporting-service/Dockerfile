@@ -4,15 +4,15 @@ FROM golang:1.26.5 AS builder
 WORKDIR /app
 
 # Cache modules
-#COPY go.mod go.sum ./
-COPY go.mod ./
+COPY go.mod go.sum ./
+
 RUN go mod download
 
 # Copy source
 COPY . .
 
 # Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o service ./cmd
+RUN CGO_ENABLED=0 GOOS=linux go build -o service ./cmd/reporting-service
     
 # ---- Run Stage ----
 FROM alpine:3.19

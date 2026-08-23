@@ -9,6 +9,7 @@ type Config struct {
 	FinancingURL    string
 	LoanURL         string
 	DisbursementURL string
+	ReportingURL    string
 	Port            string
 	JWTSecret       string
 }
@@ -21,6 +22,7 @@ func Load() Config {
 		FinancingURL:    getEnv("FINANCING_URL", "http://financing-service:8080"),
 		LoanURL:         getEnv("LOAN_SERVICE_URL", "http://loan-service:8080"),
 		DisbursementURL: getEnv("DISBURSEMENT_URL", "http://disbursement-service:8080"),
+		ReportingURL:    getEnv("REPORTING_SERVICE_URL", "http://reporting-service:8085"),
 		Port:            getEnv("PORT", "8000"),
 		JWTSecret:       os.Getenv("JWT_SECRET"),
 	}

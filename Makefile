@@ -48,6 +48,7 @@ run-app:
 	docker compose up -d --build loan-service
 	docker compose up -d --build ledger-service
 	docker compose up -d --build disbursement-service
+	docker compose up -d --build reporting-service
 
 #stop-app:
 #	docker compose down
@@ -77,3 +78,6 @@ push-quick:
 #	docker start eduflex-studentdb-container
 #	docker start eduflex-schooldb-container
 #	docker start eduflex-authdb-container
+
+start-docker:
+	docker desktop restart
