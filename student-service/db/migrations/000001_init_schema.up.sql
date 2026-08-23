@@ -9,3 +9,5 @@ CREATE TABLE students (
     phone        TEXT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
