@@ -36,7 +36,7 @@ func (s *StudentReportService) GenerateStudentLoanSummary(studentID string) (Stu
 		return StudentLoanSummary{}, fmt.Errorf("failed to list agreements: %w", err)
 	}
 
-	installments, err := s.financing.ListInstallmentsByStudent(studentID)
+	details, installments, err := s.financing.ListInstallmentsByStudent(studentID)
 	if err != nil {
 		return StudentLoanSummary{}, fmt.Errorf("failed to list installments: %w", err)
 	}
@@ -58,7 +58,7 @@ func (s *StudentReportService) GenerateStudentLoanSummary(studentID string) (Stu
 	return StudentLoanSummary{
 		StudentInfo:   studentInfo,
 		Agreements:    agreements,
-		Installments:  installments,
+		Installments:  details, //installments,
 		Payments:      payments,
 		Outstanding:   outstanding,
 		LedgerEntries: ledgerEntries,

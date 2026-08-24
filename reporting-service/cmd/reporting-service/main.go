@@ -20,9 +20,10 @@ func main() {
 	schoolClient := client.NewSchoolClient(cfg.SchoolURL)
 	studentClient := client.NewStudentClient(cfg.StudentURL)
 	financingClient := client.NewFinancingClient(cfg.FinancingURL)
+	disbursementClient := client.NewDisbursementClient(cfg.DisbursementURL)
 
 	// Initialize services
-	schoolReportService := service.NewSchoolReportService(ledgerClient, studentClient, schoolClient)
+	schoolReportService := service.NewSchoolReportService(ledgerClient, studentClient, schoolClient, disbursementClient)
 	studentReportService := service.NewStudentReportService(ledgerClient, financingClient, studentClient)
 	financialReportService := service.NewFinancialReportService(ledgerClient)
 

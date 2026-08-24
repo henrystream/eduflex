@@ -2,6 +2,9 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -39,6 +42,11 @@ func (c *StudentClient) GetStudent(studentID string) (Student, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return Student{}, fmt.Errorf("student service returned status %d: %s", resp.StatusCode, string(body))
+	}
+
 	var student Student
 	err = json.NewDecoder(resp.Body).Decode(&student)
 	return student, err
@@ -51,10 +59,15 @@ func (c *StudentClient) ListDisbursementsBySchool(schoolID string) ([]pgtype.Num
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("student service returned status %d", resp.StatusCode)
+	}
+
 	var disbursements []Disbursement
 	err = json.NewDecoder(resp.Body).Decode(&disbursements)
 	if err != nil {
-		return nil, err
+		// Try to parse as empty array if response is null or empty
+		return []pgtype.Numeric{}, nil
 	}
 
 	amounts := make([]pgtype.Numeric, len(disbursements))
@@ -72,10 +85,15 @@ func (c *StudentClient) ListPaymentsBySchool(schoolID string) ([]pgtype.Numeric,
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("student service returned status %d", resp.StatusCode)
+	}
+
 	var payments []Payment
 	err = json.NewDecoder(resp.Body).Decode(&payments)
 	if err != nil {
-		return nil, err
+		// Try to parse as empty array if response is null or empty
+		return []pgtype.Numeric{}, nil
 	}
 
 	amounts := make([]pgtype.Numeric, len(payments))
@@ -93,10 +111,15 @@ func (c *StudentClient) ListPaymentsByStudent(studentID string) ([]pgtype.Numeri
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("student service returned status %d", resp.StatusCode)
+	}
+
 	var payments []Payment
 	err = json.NewDecoder(resp.Body).Decode(&payments)
 	if err != nil {
-		return nil, err
+		// Try to parse as empty array if response is null or empty
+		return []pgtype.Numeric{}, nil
 	}
 
 	amounts := make([]pgtype.Numeric, len(payments))

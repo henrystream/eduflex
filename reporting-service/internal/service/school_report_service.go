@@ -9,13 +9,14 @@ import (
 )
 
 type SchoolReportService struct {
-	ledger  *client.LedgerClient
-	student *client.StudentClient
-	school  *client.SchoolClient
+	ledger       *client.LedgerClient
+	student      *client.StudentClient
+	school       *client.SchoolClient
+	disbursement *client.DisbursementClient
 }
 
-func NewSchoolReportService(ledger *client.LedgerClient, student *client.StudentClient, school *client.SchoolClient) *SchoolReportService {
-	return &SchoolReportService{ledger: ledger, student: student, school: school}
+func NewSchoolReportService(ledger *client.LedgerClient, student *client.StudentClient, school *client.SchoolClient, disbursement *client.DisbursementClient) *SchoolReportService {
+	return &SchoolReportService{ledger: ledger, student: student, school: school, disbursement: disbursement}
 }
 
 type SchoolStatement struct {
@@ -32,7 +33,7 @@ func (s *SchoolReportService) GenerateSchoolStatement(schoolID string) (SchoolSt
 		return SchoolStatement{}, fmt.Errorf("failed to get school info: %w", err)
 	}
 
-	disbursements, err := s.student.ListDisbursementsBySchool(schoolID)
+	disbursements, err := s.disbursement.ListBySchool(schoolID)
 	if err != nil {
 		return SchoolStatement{}, fmt.Errorf("failed to list disbursements: %w", err)
 	}

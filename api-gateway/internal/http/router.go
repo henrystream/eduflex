@@ -91,6 +91,9 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		r.With(auth.RequireRoles("admin", "finance")).Post("/", func(w http.ResponseWriter, r *http.Request) {
 			forward(w, r, cfg.FinancingURL)
 		})
+		r.With(auth.RequireRoles("admin", "finance")).Get("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.FinancingURL)
+		})
 	})
 
 	r.Route("/installments", func(r chi.Router) {

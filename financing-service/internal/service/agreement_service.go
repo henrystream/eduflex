@@ -124,3 +124,7 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 
 	return agreement, nil
 }
+
+func (s *AgreementService) ListAgreementsByStudent(ctx context.Context, studentID pgtype.UUID) ([]db.FinancingAgreement, error) {
+	return s.repo.ListAgreementsByStudent(ctx, studentID)
+}

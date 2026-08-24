@@ -14,6 +14,7 @@ func NewRouter(agreementsvc *service.AgreementService, installmentsvc *service.I
 	agreementsHandler := NewAgreementHandler(agreementsvc)
 	r.Route("/agreements", func(r chi.Router) {
 		r.Post("/", agreementsHandler.CreateAgreement)
+		r.Get("/", agreementsHandler.ListAgreementsByStudent)
 	})
 	installmentHandler := NewInstallmentHandler(installmentsvc)
 	r.Route("/installments", func(r chi.Router) {

@@ -2,6 +2,8 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -36,28 +38,50 @@ func (c *FinancingClient) ListAgreementsByStudent(studentID string) ([]Agreement
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("financing service returned status %d: %s", resp.StatusCode, string(body))
+	}
+
 	var agreements []Agreement
 	err = json.NewDecoder(resp.Body).Decode(&agreements)
-	return agreements, err
+	if err != nil {
+		// Return empty array on decode error
+		return []Agreement{}, nil
+	}
+	return agreements, nil
 }
 
-func (c *FinancingClient) ListInstallmentsByStudent(studentID string) ([]pgtype.Numeric, error) {
-	resp, err := http.Get(c.BaseURL + "/installments?student_id=" + studentID)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (c *FinancingClient) ListInstallmentsByStudent(studentID string) ([]Installment, []pgtype.Numeric, error) {
+	var (
+		amounts      []pgtype.Numeric
+		installments []Installment
+	)
+	agreements, _ := c.ListAgreementsByStudent(studentID)
 
-	var installments []Installment
-	err = json.NewDecoder(resp.Body).Decode(&installments)
-	if err != nil {
-		return nil, err
+	for _, agr := range agreements {
+		resp, err := http.Get(c.BaseURL + "/installments?financing_id=" + agr.ID) //requires fid
+		if err != nil {
+			return nil, nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return nil, nil, fmt.Errorf("financing service returned status %d: %s", resp.StatusCode, string(body))
+		}
+
+		err = json.NewDecoder(resp.Body).Decode(&installments)
+		if err != nil {
+			// Return empty array on decode error
+			return nil, []pgtype.Numeric{}, nil
+		}
+
+		amounts = make([]pgtype.Numeric, len(installments))
+		for i, inst := range installments {
+			amounts[i] = inst.Amount
+		}
 	}
 
-	amounts := make([]pgtype.Numeric, len(installments))
-	for i, inst := range installments {
-		amounts[i] = inst.Amount
-	}
-
-	return amounts, nil
+	return installments, amounts, nil
 }
