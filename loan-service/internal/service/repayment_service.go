@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	db "github.com/henrystream/eduflex/loan-service/db/sqlc"
+	"github.com/henrystream/eduflex/loan-service/internal/events"
 	"github.com/henrystream/eduflex/loan-service/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -54,6 +55,18 @@ func (s *RepaymentService) CreateRepayment(ctx context.Context, req CreateRepaym
 			OccurredAt:    repayment.PaidAt,
 		})
 	}
+
+	var eventClient events.EventClient
+
+	pubRequest := events.PublishEventRequest{
+		EventType:     "LOAN_REPAYMENT_CREATED",
+		SourceService: "loan-service",
+		AggregateID:   repayment.ID,
+		OccurredAt:    pgtype.Timestamptz{Time: repayment.PaidAt.Time, Valid: true},
+		Payload:       repayment,
+	}
+
+	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return repayment, nil
 }

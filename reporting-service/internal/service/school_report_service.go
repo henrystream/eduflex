@@ -100,6 +100,6 @@ func Subtract(a, b string) string {
 		return "0"
 	}
 
-	result := decimalA.Sub(decimalB)
-	return result.String()
+	result := decimalA.Sub(decimalB) //--- needs fixing
+	return result.Shift(-2).String()
 }

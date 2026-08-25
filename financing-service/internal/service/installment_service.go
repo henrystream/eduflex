@@ -7,6 +7,7 @@ import (
 	"math/big"
 
 	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
+	"github.com/henrystream/eduflex/financing-service/internal/events"
 	"github.com/henrystream/eduflex/financing-service/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -78,6 +79,19 @@ func (s *InstallmentService) GenerateInstallments(ctx context.Context, agreement
 				},
 			})
 		}
+
+		var eventClient events.EventClient
+
+		pubRequest := events.PublishEventRequest{
+			EventType:     "INSTALLMENT_CREATED",
+			SourceService: "financing-service",
+			AggregateID:   installment.ID,
+			OccurredAt:    pgtype.Timestamptz{Time: installment.DueDate.Time, Valid: true},
+			Payload:       installment,
+		}
+
+		eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+
 	}
 
 	return nil

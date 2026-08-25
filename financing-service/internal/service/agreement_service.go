@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
+	"github.com/henrystream/eduflex/financing-service/internal/events"
 	"github.com/henrystream/eduflex/financing-service/internal/repository"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -121,6 +122,18 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 			},
 		})
 	}
+
+	var eventClient events.EventClient
+
+	pubRequest := events.PublishEventRequest{
+		EventType:     "FINANCING_AGREEMENT_CREATED",
+		SourceService: "financing-service",
+		AggregateID:   agreement.ID,
+		OccurredAt:    pgtype.Timestamptz{Time: agreement.StartDate.Time, Valid: true},
+		Payload:       agreement,
+	}
+
+	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return agreement, nil
 }

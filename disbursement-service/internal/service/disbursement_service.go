@@ -6,6 +6,7 @@ import (
 	"time"
 
 	db "github.com/henrystream/eduflex/disbursement-service/db/sqlc"
+	"github.com/henrystream/eduflex/disbursement-service/internal/events"
 	"github.com/henrystream/eduflex/disbursement-service/internal/ledger"
 	"github.com/henrystream/eduflex/disbursement-service/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -62,6 +63,18 @@ func (s *DisbursementService) CreateDisbursement(ctx context.Context, req Create
 			return db.EduflexDisbursement{}, err
 		}
 	}
+
+	var eventClient events.EventClient
+
+	pubRequest := events.PublishEventRequest{
+		EventType:     "DISBURSEMENT_CREATED",
+		SourceService: "disbursement-service",
+		AggregateID:   disbursement.ID,
+		OccurredAt:    pgtype.Timestamptz{Time: disbursement.DisbursedAt.Time, Valid: true},
+		Payload:       disbursement,
+	}
+
+	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return disbursement, nil
 }

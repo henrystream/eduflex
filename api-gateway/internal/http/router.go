@@ -167,5 +167,16 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		})
 	})
 
+	//EVENTS ROUTES
+
+	r.Route("/events", func(r chi.Router) {
+		r.With(auth.RequireRoles("admin", "finance", "school")).Post("/", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.EventsURL)
+		})
+		r.With(auth.RequireRoles("admin", "finance", "school")).Get("/unprocessed", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.EventsURL)
+		})
+	})
+
 	return r
 }

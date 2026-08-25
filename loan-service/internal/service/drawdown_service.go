@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	db "github.com/henrystream/eduflex/loan-service/db/sqlc"
+	"github.com/henrystream/eduflex/loan-service/internal/events"
 	"github.com/henrystream/eduflex/loan-service/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -74,6 +75,18 @@ func (s *DrawdownService) CreateDrawdown(ctx context.Context, req CreateDrawdown
 			},
 		})
 	}
+
+	var eventClient events.EventClient
+
+	pubRequest := events.PublishEventRequest{
+		EventType:     "LOAN_DRAWDOWN_CREATED",
+		SourceService: "loan-service",
+		AggregateID:   drawdown.ID,
+		OccurredAt:    pgtype.Timestamptz{Time: drawdown.DrawdownDate.Time, Valid: true},
+		Payload:       drawdown,
+	}
+
+	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return drawdown, nil
 }

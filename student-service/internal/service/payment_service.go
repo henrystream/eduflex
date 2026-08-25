@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	db "github.com/henrystream/eduflex/student-service/db/sqlc"
+	"github.com/henrystream/eduflex/student-service/internal/events"
 	"github.com/henrystream/eduflex/student-service/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -74,6 +75,18 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 			},
 		})
 	}
+
+	var eventClient events.EventClient
+
+	pubRequest := events.PublishEventRequest{
+		EventType:     "STUDENT_PAYMENT_CREATED",
+		SourceService: "student-service",
+		AggregateID:   payment.ID,
+		OccurredAt:    pgtype.Timestamptz{Time: payment.PaidAt.Time, Valid: true},
+		Payload:       payment,
+	}
+
+	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return payment, nil
 }
