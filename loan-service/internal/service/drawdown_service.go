@@ -86,7 +86,7 @@ func (s *DrawdownService) CreateDrawdown(ctx context.Context, req CreateDrawdown
 		Payload:       drawdown,
 	}
 
-	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return drawdown, nil
 }

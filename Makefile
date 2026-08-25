@@ -55,6 +55,7 @@ run-app:
 	docker compose up -d --build reporting-service
 	docker compose up -d --build events-service
 	docker compose up -d --build worker-service
+	docker compose up -d --build notification-service
 
 #stop-app:
 #	docker compose down

@@ -86,7 +86,7 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 		Payload:       payment,
 	}
 
-	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return payment, nil
 }

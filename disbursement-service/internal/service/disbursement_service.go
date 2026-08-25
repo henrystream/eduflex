@@ -74,7 +74,7 @@ func (s *DisbursementService) CreateDisbursement(ctx context.Context, req Create
 		Payload:       disbursement,
 	}
 
-	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return disbursement, nil
 }

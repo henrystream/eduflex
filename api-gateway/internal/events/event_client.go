@@ -22,19 +22,19 @@ type PublishEventRequest struct {
 }
 
 func NewEventClient(baseURL, sourceService string) *EventClient {
-	return &EventClient{BaseURL: baseURL, SourceService: sourceService}
+	return &EventClient{BaseURL: "http://events-service:8080", SourceService: sourceService}
 }
 
-func (c *EventClient) Publish(eventType string, aggregateID pgtype.UUID, occurredAt pgtype.Timestamptz, payload interface{}) error {
+func (c *EventClient) Publish(eventType, sourceService string, aggregateID pgtype.UUID, occurredAt pgtype.Timestamptz, payload interface{}) error {
 	req := PublishEventRequest{
 		EventType:     eventType,
-		SourceService: c.SourceService,
+		SourceService: sourceService,
 		AggregateID:   aggregateID,
 		Payload:       payload,
 		OccurredAt:    occurredAt,
 	}
 
 	body, _ := json.Marshal(req)
-	_, err := http.Post(c.BaseURL+"/events", "application/json", bytes.NewBuffer(body))
+	_, err := http.Post("http://events-service:8080/events", "application/json", bytes.NewBuffer(body))
 	return err
 }

@@ -212,6 +212,7 @@ services:
       LEDGER_URL: http://ledger-service:8080
       EVENTS_URL: http://events-service:8080
       WORKER_URL: http://worker-service:8080
+      NOTIFICATION_URL: http://notifications-service:8080
       EVENT_INTERVAL: 5
       JWT_SECRET: supersecretkey
     depends_on:
@@ -224,6 +225,7 @@ services:
       - ledger-service
       - events-service
       - worker-service
+      - notification-service
     ports:
       - "8000:8000"
 

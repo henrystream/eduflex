@@ -66,7 +66,7 @@ func (s *RepaymentService) CreateRepayment(ctx context.Context, req CreateRepaym
 		Payload:       repayment,
 	}
 
-	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	return repayment, nil
 }

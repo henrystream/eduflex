@@ -90,7 +90,7 @@ func (s *InstallmentService) GenerateInstallments(ctx context.Context, agreement
 			Payload:       installment,
 		}
 
-		eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+		eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 
 	}
 

@@ -3,8 +3,6 @@ package client
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type EventsClient struct {
@@ -16,16 +14,16 @@ func NewEventsClient(url string) *EventsClient {
 }
 
 type DomainEvent struct {
-	ID            string             `json:"id"`
-	EventType     string             `json:"event_type"`
-	SourceService string             `json:"source_service"`
-	AggregateID   pgtype.UUID        `json:"aggregate_id"`
-	Payload       json.RawMessage    `json:"payload"`
-	OccurredAt    pgtype.Timestamptz `json:"occurred_at"`
+	ID            string          `json:"id"`
+	EventType     string          `json:"event_type"`
+	SourceService string          `json:"source_service"`
+	AggregateID   string          `json:"aggregate_id"`
+	Payload       json.RawMessage `json:"payload"`
+	OccurredAt    string          `json:"occurred_at"`
 }
 
 func (c *EventsClient) ListUnprocessed() ([]DomainEvent, error) {
-	resp, err := http.Get("http://events-service:8080/events/unprocessed")
+	resp, err := http.Get(c.BaseURL + "/events/unprocessed")
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +35,7 @@ func (c *EventsClient) ListUnprocessed() ([]DomainEvent, error) {
 }
 
 func (c *EventsClient) MarkProcessed(id string) error {
-	req, _ := http.NewRequest("POST", "http://events-service:8080/events/"+id+"/processed", nil)
+	req, _ := http.NewRequest("POST", c.BaseURL+"/events/"+id+"/processed", nil)
 	_, err := http.DefaultClient.Do(req)
 	return err
 }

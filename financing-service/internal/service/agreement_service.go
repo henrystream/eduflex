@@ -133,7 +133,10 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 		Payload:       agreement,
 	}
 
-	eventClient.Publish(pubRequest.EventType, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	err = eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	if err != nil {
+		return agreement, err
+	}
 
 	return agreement, nil
 }
