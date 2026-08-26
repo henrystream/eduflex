@@ -57,6 +57,7 @@ run-app:
 	docker compose up -d --build worker-service
 	docker compose up -d --build notification-service
 	docker compose up -d --build scheduler-service
+	docker compose up -d --build reconciliation-service
 
 #stop-app:
 #	docker compose down
