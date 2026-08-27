@@ -204,6 +204,17 @@ services:
       - loan-service
       - ledger-service
 
+  fraud-service:
+    build: ./fraud-service
+    depends_on:
+      - school-service
+      - student-service
+      - financing-service
+      - loan-service
+      - ledger-service
+  
+  
+
 
   # ============================
   # API GATEWAY
@@ -222,7 +233,8 @@ services:
       EVENTS_URL: http://events-service:8080
       WORKER_URL: http://worker-service:8080
       NOTIFICATION_URL: http://notifications-service:8080
-      RECONCILIATION_URL: http://feconciliation-service:8080
+      RECONCILIATION_URL: http://reconciliation-service:8080
+      FRAUD_URL: http://fraud-service:8080
       EVENT_INTERVAL: 5
       JWT_SECRET: supersecretkey
     depends_on:

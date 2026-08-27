@@ -11,6 +11,8 @@ import (
 
 	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
 	"github.com/henrystream/eduflex/financing-service/internal/config"
+	"github.com/henrystream/eduflex/financing-service/internal/events"
+	"github.com/henrystream/eduflex/financing-service/internal/fraud"
 	apphttp "github.com/henrystream/eduflex/financing-service/internal/http"
 	"github.com/henrystream/eduflex/financing-service/internal/repository"
 	"github.com/henrystream/eduflex/financing-service/internal/service"
@@ -60,10 +62,14 @@ func main() {
 	ledger := ledgerClient{baseURL: ledgerURL}
 
 	queries := db.New(conn)
+
+	eventClient := events.NewEventClient("http://event-service:8080", "financing-service")
+	fraudClient := fraud.NewFraudClient("http://fraud-service:8080")
+
 	agreementRepo := repository.NewAgreementRepository(queries)
 	installmentRepo := repository.NewInstallmentRepository(queries)
 	installmentSvc := service.NewInstallmentService(installmentRepo, ledger)
-	agreementSvc := service.NewAgreementService(agreementRepo, installmentSvc, ledger)
+	agreementSvc := service.NewAgreementService(agreementRepo, installmentSvc, eventClient, fraudClient, ledger)
 
 	router := apphttp.NewRouter(agreementSvc, installmentSvc)
 

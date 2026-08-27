@@ -16,6 +16,7 @@ type Querier interface {
 	GetAgreement(ctx context.Context, id pgtype.UUID) (FinancingAgreement, error)
 	ListAgreementsByStudent(ctx context.Context, studentID pgtype.UUID) ([]FinancingAgreement, error)
 	ListInstallments(ctx context.Context, financingID pgtype.UUID) ([]MonthlyInstallment, error)
+	UpdateAgreementStatus(ctx context.Context, arg UpdateAgreementStatusParams) (FinancingAgreement, error)
 }
 
 var _ Querier = (*Queries)(nil)

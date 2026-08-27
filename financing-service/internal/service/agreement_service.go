@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"time"
 
 	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
 	"github.com/henrystream/eduflex/financing-service/internal/events"
+	"github.com/henrystream/eduflex/financing-service/internal/fraud"
 	"github.com/henrystream/eduflex/financing-service/internal/repository"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -15,6 +17,8 @@ import (
 type AgreementService struct {
 	repo         *repository.AgreementRepository
 	installments *InstallmentService
+	events       *events.EventClient
+	fraud        *fraud.FraudClient
 	ledger       LedgerClient
 }
 
@@ -33,12 +37,24 @@ type LedgerEntryRequest struct {
 	OccurredAt    pgtype.Timestamptz `json:"occurred_at"`
 }
 
-func NewAgreementService(r *repository.AgreementRepository, i *InstallmentService, ledger ...LedgerClient) *AgreementService {
+func NewAgreementService(
+	repo *repository.AgreementRepository,
+	installments *InstallmentService,
+	events *events.EventClient,
+	fraud *fraud.FraudClient,
+	ledger ...LedgerClient,
+) *AgreementService {
 	var ledgerClient LedgerClient
 	if len(ledger) > 0 {
 		ledgerClient = ledger[0]
 	}
-	return &AgreementService{repo: r, installments: i, ledger: ledgerClient}
+	return &AgreementService{
+		repo:         repo,
+		installments: installments,
+		events:       events,
+		fraud:        fraud,
+		ledger:       ledgerClient,
+	}
 }
 
 type CreateAgreementRequest struct {
@@ -95,14 +111,51 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 		TotalPayable: tp,
 		TermMonths:   req.TermMonths,
 		StartDate:    req.StartDate,
-		Status:       "ACTIVE",
+		Status:       "PENDING",
 	})
 	if err != nil {
 		return db.FinancingAgreement{}, err
 	}
+	// 3. FRAUD CHECK
+	fraudResult, _ := s.fraud.CheckAgreement(agreement.ID)
+
+	// 4. BLOCK HIGH-RISK AGREEMENTS
+	if fraudResult.AgreementRisk.Level == "HIGH" ||
+		fraudResult.StudentRisk.Level == "HIGH" ||
+		fraudResult.SchoolRisk.Level == "HIGH" {
+
+		// Mark agreement as REJECTED
+		s.repo.UpdateStatus(ctx, agreement.ID, "REJECTED_FRAUD")
+
+		// Publish event
+		s.events.Publish(
+			"AGREEMENT_REJECTED_FRAUD",
+			"financing-service",
+			agreement.ID,
+			pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			fraudResult,
+		)
+
+		return db.FinancingAgreement{}, errors.New("agreement rejected due to high fraud risk")
+	}
+
+	// 5. APPROVE AGREEMENT
+	approved, err := s.repo.UpdateStatus(ctx, agreement.ID, "APPROVED")
+	if err != nil {
+		return db.FinancingAgreement{}, err
+	}
+
+	// 6. Publish approval event
+	s.events.Publish(
+		"FINANCING_AGREEMENT_APPROVED",
+		"financing-service",
+		agreement.ID,
+		pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		approved,
+	)
 
 	// Generate installments
-	err = s.installments.GenerateInstallments(ctx, agreement)
+	err = s.installments.GenerateInstallments(ctx, approved)
 	if err != nil {
 		return db.FinancingAgreement{}, err
 	}
@@ -110,15 +163,15 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 	if s.ledger != nil {
 		_ = s.ledger.CreateEntry(LedgerEntryRequest{
 			EventType:     "FINANCING_AGREEMENT",
-			EventID:       agreement.ID,
+			EventID:       approved.ID,
 			SourceService: "financing-service",
 			DebitAccount:  "Accounts Receivable - Student",
 			CreditAccount: "Financing Principal",
-			Amount:        agreement.Principal,
+			Amount:        approved.Principal,
 			Currency:      "AED",
 			OccurredAt: pgtype.Timestamptz{
-				Time:  agreement.StartDate.Time,
-				Valid: agreement.StartDate.Valid,
+				Time:  approved.StartDate.Time,
+				Valid: approved.StartDate.Valid,
 			},
 		})
 	}
@@ -128,17 +181,17 @@ func (s *AgreementService) CreateAgreement(ctx context.Context, req CreateAgreem
 	pubRequest := events.PublishEventRequest{
 		EventType:     "FINANCING_AGREEMENT_CREATED",
 		SourceService: "financing-service",
-		AggregateID:   agreement.ID,
-		OccurredAt:    pgtype.Timestamptz{Time: agreement.StartDate.Time, Valid: true},
-		Payload:       agreement,
+		AggregateID:   approved.ID,
+		OccurredAt:    pgtype.Timestamptz{Time: approved.StartDate.Time, Valid: true},
+		Payload:       approved,
 	}
 
 	err = eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
 	if err != nil {
-		return agreement, err
+		return approved, err
 	}
 
-	return agreement, nil
+	return approved, nil
 }
 
 func (s *AgreementService) ListAgreementsByStudent(ctx context.Context, studentID pgtype.UUID) ([]db.FinancingAgreement, error) {

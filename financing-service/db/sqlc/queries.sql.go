@@ -188,3 +188,34 @@ func (q *Queries) ListInstallments(ctx context.Context, financingID pgtype.UUID)
 	}
 	return items, nil
 }
+
+const updateAgreementStatus = `-- name: UpdateAgreementStatus :one
+UPDATE financing_agreements
+SET status = $2
+WHERE id = $1
+RETURNING id, student_id, invoice_id, principal, interest_rate, service_fee, total_payable, term_months, start_date, status, created_at
+`
+
+type UpdateAgreementStatusParams struct {
+	ID     pgtype.UUID `json:"id"`
+	Status string      `json:"status"`
+}
+
+func (q *Queries) UpdateAgreementStatus(ctx context.Context, arg UpdateAgreementStatusParams) (FinancingAgreement, error) {
+	row := q.db.QueryRow(ctx, updateAgreementStatus, arg.ID, arg.Status)
+	var i FinancingAgreement
+	err := row.Scan(
+		&i.ID,
+		&i.StudentID,
+		&i.InvoiceID,
+		&i.Principal,
+		&i.InterestRate,
+		&i.ServiceFee,
+		&i.TotalPayable,
+		&i.TermMonths,
+		&i.StartDate,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}

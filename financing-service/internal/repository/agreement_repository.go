@@ -48,3 +48,10 @@ func (r *AgreementRepository) GetAgreement(ctx context.Context, id pgtype.UUID) 
 func (r *AgreementRepository) ListAgreementsByStudent(ctx context.Context, studentID pgtype.UUID) ([]db.FinancingAgreement, error) {
 	return r.queries.ListAgreementsByStudent(ctx, studentID)
 }
+
+func (r *AgreementRepository) UpdateStatus(ctx context.Context, id pgtype.UUID, status string) (db.FinancingAgreement, error) {
+	return r.queries.UpdateAgreementStatus(ctx, db.UpdateAgreementStatusParams{
+		ID:     id,
+		Status: status,
+	})
+}

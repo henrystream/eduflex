@@ -23,3 +23,9 @@ RETURNING *;
 
 -- name: ListInstallments :many
 SELECT * FROM monthly_installments WHERE financing_id = $1 ORDER BY installment_number;
+
+-- name: UpdateAgreementStatus :one
+UPDATE financing_agreements
+SET status = $2
+WHERE id = $1
+RETURNING *;

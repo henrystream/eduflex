@@ -178,5 +178,13 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		})
 	})
 
+	//FRAUD ROUTES
+	r.Route("/fraud", func(r chi.Router) {
+
+		r.With(auth.RequireRoles("admin", "finance", "school")).Get("/check-agreement", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.FraudURL)
+		})
+	})
+
 	return r
 }
