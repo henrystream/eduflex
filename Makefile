@@ -60,7 +60,7 @@ run-app:
 	docker compose up -d --build disbursement-service
 	docker compose up -d --build events-service
 	docker compose up -d --build worker-service
-	docker compose up -d --build report-service
+	docker compose up -d --build reporting-service
 	docker compose up -d --build notification-service
 	docker compose up -d --build scheduler-service
 	docker compose up -d --build reconciliation-service

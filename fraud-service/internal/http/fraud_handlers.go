@@ -32,11 +32,10 @@ func (h *FraudHandler) CheckAgreement(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := h.svc.CheckAgreementRisk(studentUUID, agreeUUID)
-	if err != nil {
-		//http.Error(w, "Error is here", http.StatusBadRequest)
+	/*if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	}*/
 
 	writeJSON(w, http.StatusOK, res)
 }

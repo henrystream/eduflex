@@ -47,10 +47,10 @@ type FraudCheckResult struct {
 
 func (s *FraudService) CheckAgreementRisk(studentID, agreementID pgtype.UUID) (FraudCheckResult, error) {
 
-	agreements, err := s.financing.GetAgreement(studentID)
-	if err != nil {
+	agreements, _ := s.financing.GetAgreement(studentID)
+	/*if err != nil {
 		return FraudCheckResult{}, err
-	}
+	}*/
 	var newAgree client.Agreement
 	for _, agree := range agreements {
 		if agree.ID == agreementID {
@@ -59,16 +59,16 @@ func (s *FraudService) CheckAgreementRisk(studentID, agreementID pgtype.UUID) (F
 		}
 
 	}
-	student, err := s.students.GetStudent(newAgree.StudentID.String())
-	if err != nil {
+	student, _ := s.students.GetStudent(newAgree.StudentID.String())
+	/*if err != nil {
 		return FraudCheckResult{}, err
-	}
+	}*/
 
-	school, err := s.schools.GetSchool(newAgree.SchoolID)
+	school, _ := s.schools.GetSchool(newAgree.SchoolID)
 
-	if err != nil {
+	/*if err != nil {
 		return FraudCheckResult{}, err
-	}
+	}*/
 
 	// naive: count agreements by student via ledger entries
 	entries, _ := s.ledger.ListByEvent("FINANCING_AGREEMENT", newAgree.StudentID.String())
