@@ -17,6 +17,8 @@ func NewRouter(svc *service.SchoolService) *chi.Mux {
 		r.Post("/", h.CreateSchool)
 		r.Get("/", h.ListSchools)
 		r.Get("/{id}", h.GetSchool)
+		r.Put("/{id}", h.UpdateSchool)
+
 	})
 
 	return r

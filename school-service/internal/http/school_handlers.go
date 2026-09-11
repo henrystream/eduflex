@@ -61,6 +61,29 @@ func (h *SchoolHandler) ListSchools(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, schools)
 }
 
+func (h *SchoolHandler) UpdateSchool(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var req service.UpdateSchoolRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	var newID pgtype.UUID
+	newID.Scan(id)
+	req.ID = newID
+	school, err := h.svc.UpdateSchool(context.Background(), req)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, school)
+
+}
+
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

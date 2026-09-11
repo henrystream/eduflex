@@ -45,6 +45,11 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		r.With(auth.RequireRoles("admin", "school", "finance")).Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			forward(w, r, cfg.SchoolURL)
 		})
+
+		// Admin, school, finance can update a school
+		r.With(auth.RequireRoles("admin", "school", "finance")).Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
+			forward(w, r, cfg.SchoolURL)
+		})
 	})
 
 	// STUDENT ROUTES

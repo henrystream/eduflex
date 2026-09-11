@@ -24,6 +24,14 @@ type CreateSchoolRequest struct {
 	ContactPhone pgtype.Text `json:"contact_phone"`
 }
 
+type UpdateSchoolRequest struct {
+	ID           pgtype.UUID `json:"id"`
+	Name         string      `json:"name"`
+	Address      pgtype.Text `json:"address"`
+	ContactEmail pgtype.Text `json:"contact_email"`
+	ContactPhone pgtype.Text `json:"contact_phone"`
+}
+
 func (s *SchoolService) CreateSchool(ctx context.Context, req CreateSchoolRequest) (db.School, error) {
 	if req.Name == "" {
 		return db.School{}, errors.New("name is required")
@@ -43,4 +51,8 @@ func (s *SchoolService) GetSchool(ctx context.Context, id pgtype.UUID) (db.Schoo
 
 func (s *SchoolService) ListSchools(ctx context.Context) ([]db.School, error) {
 	return s.repo.ListSchools(ctx)
+}
+
+func (s *SchoolService) UpdateSchool(ctx context.Context, req UpdateSchoolRequest) (db.School, error) {
+	return s.repo.UpdateSchool(ctx, repository.UpdateSchoolParams(req))
 }
