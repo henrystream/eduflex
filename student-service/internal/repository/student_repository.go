@@ -40,3 +40,7 @@ func (r *StudentRepository) GetStudent(ctx context.Context, id pgtype.UUID) (db.
 func (r *StudentRepository) ListStudents(ctx context.Context) ([]db.Student, error) {
 	return r.queries.ListStudents(ctx)
 }
+
+func (r *StudentRepository) ListStudentsBySchool(ctx context.Context, schoolID pgtype.UUID) ([]db.Student, error) {
+	return r.queries.ListStudentsBySchool(ctx, schoolID)
+}

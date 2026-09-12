@@ -19,6 +19,7 @@ type Querier interface {
 	ListEnrollmentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentSchoolEnrollment, error)
 	ListPaymentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentPayment, error)
 	ListStudents(ctx context.Context) ([]Student, error)
+	ListStudentsBySchool(ctx context.Context, schoolID pgtype.UUID) ([]Student, error)
 }
 
 var _ Querier = (*Queries)(nil)

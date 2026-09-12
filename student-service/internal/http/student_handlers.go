@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/henrystream/eduflex/student-service/internal/service"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -55,6 +56,35 @@ func (h *StudentHandler) ListStudents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, students)
+}
+
+func (h *StudentHandler) ListStudentsBySchool(w http.ResponseWriter, r *http.Request) {
+	var schoolID pgtype.UUID
+	schoolID.Scan(chi.URLParam(r, "school_id"))
+
+	students, err := h.svc.ListStudentsBySchool(r.Context(), schoolID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, students)
+}
+
+func (h *StudentHandler) GetStudentEnrollments(w http.ResponseWriter, r *http.Request) {
+	var pgUUID pgtype.UUID
+	var sv service.EnrollmentService
+	id := chi.URLParam(r, "id")
+	pgUUID.Scan(id)
+
+	enrollments, err := sv.ListEnrollmentsByStudent(r.Context(), pgUUID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(enrollments)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

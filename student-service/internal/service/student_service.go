@@ -46,3 +46,7 @@ func (s *StudentService) GetStudent(ctx context.Context, id pgtype.UUID) (db.Stu
 func (s *StudentService) ListStudents(ctx context.Context) ([]db.Student, error) {
 	return s.repo.ListStudents(ctx)
 }
+
+func (s *StudentService) ListStudentsBySchool(ctx context.Context, schoolID pgtype.UUID) ([]db.Student, error) {
+	return s.repo.ListStudentsBySchool(ctx, schoolID)
+}

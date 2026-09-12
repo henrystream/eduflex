@@ -246,3 +246,39 @@ func (q *Queries) ListStudents(ctx context.Context) ([]Student, error) {
 	}
 	return items, nil
 }
+
+const listStudentsBySchool = `-- name: ListStudentsBySchool :many
+SELECT DISTINCT s.id, s.first_name, s.last_name, s.date_of_birth, s.email, s.phone, s.created_at
+FROM students s
+JOIN student_school_enrollments e ON e.student_id = s.id
+WHERE e.school_id = $1
+ORDER BY s.created_at DESC
+`
+
+func (q *Queries) ListStudentsBySchool(ctx context.Context, schoolID pgtype.UUID) ([]Student, error) {
+	rows, err := q.db.Query(ctx, listStudentsBySchool, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Student
+	for rows.Next() {
+		var i Student
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.DateOfBirth,
+			&i.Email,
+			&i.Phone,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
