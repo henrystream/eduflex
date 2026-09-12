@@ -20,7 +20,6 @@ func NewSchoolHandler(svc *service.SchoolService) *SchoolHandler {
 }
 
 func (h *SchoolHandler) CreateSchool(w http.ResponseWriter, r *http.Request) {
-
 	var req service.CreateSchoolRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -29,7 +28,6 @@ func (h *SchoolHandler) CreateSchool(w http.ResponseWriter, r *http.Request) {
 	}
 
 	school, err := h.svc.CreateSchool(context.Background(), req)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -81,6 +79,22 @@ func (h *SchoolHandler) UpdateSchool(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, school)
+
+}
+
+func (h *SchoolHandler) DeleteSchool(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	var newID pgtype.UUID
+	newID.Scan(id)
+	err := h.svc.DeleteSchool(context.Background(), service.DeleteSchoolRequest{ID: newID})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 
 }
 

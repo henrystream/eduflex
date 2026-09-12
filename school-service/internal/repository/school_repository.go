@@ -30,6 +30,14 @@ type UpdateSchoolParams struct {
 	ContactPhone pgtype.Text
 }
 
+type DeleteSchoolParams struct {
+	ID           pgtype.UUID
+	Name         string
+	Address      pgtype.Text
+	ContactEmail pgtype.Text
+	ContactPhone pgtype.Text
+}
+
 func (r *SchoolRepository) CreateSchool(ctx context.Context, p CreateSchoolParams) (db.School, error) {
 	return r.queries.CreateSchool(ctx, db.CreateSchoolParams{
 		Name:         p.Name,
@@ -55,4 +63,8 @@ func (r *SchoolRepository) UpdateSchool(ctx context.Context, p UpdateSchoolParam
 		ContactEmail: p.ContactEmail,
 		ContactPhone: p.ContactPhone,
 	})
+}
+
+func (r *SchoolRepository) DeleteSchool(ctx context.Context, p DeleteSchoolParams) error {
+	return r.queries.DeleteSchool(ctx, p.ID)
 }
