@@ -29,3 +29,16 @@ UPDATE financing_agreements
 SET status = $2
 WHERE id = $1
 RETURNING *;
+
+-- name: CreatePayment :one
+INSERT INTO student_payments (installment_id, amount, payment_method, transaction_reference)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: ListPaymentsByStudent :many
+SELECT p.*
+FROM student_payments p
+JOIN monthly_installments mi ON mi.id = p.installment_id
+JOIN financing_agreements fa ON fa.id = mi.financing_id
+WHERE fa.student_id = $1
+ORDER BY p.paid_at DESC;

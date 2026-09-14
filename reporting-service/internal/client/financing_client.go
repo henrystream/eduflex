@@ -31,6 +31,15 @@ type Installment struct {
 	DueDate   string         `json:"due_date"`
 }
 
+type FinancingPayment struct {
+	ID                   string         `json:"id"`
+	InstallmentID        string         `json:"installment_id"`
+	Amount               pgtype.Numeric `json:"amount"`
+	PaidAt               string         `json:"paid_at"`
+	PaymentMethod        string         `json:"payment_method"`
+	TransactionReference string         `json:"transaction_reference"`
+}
+
 func (c *FinancingClient) ListAgreementsByStudent(studentID string) ([]Agreement, error) {
 	resp, err := http.Get(c.BaseURL + "/agreements?student_id=" + studentID)
 	if err != nil {
@@ -84,4 +93,28 @@ func (c *FinancingClient) ListInstallmentsByStudent(studentID string) ([]Install
 	}
 
 	return installments, amounts, nil
+}
+
+func (c *FinancingClient) ListPaymentsByStudent(studentID string) ([]pgtype.Numeric, error) {
+	resp, err := http.Get(c.BaseURL + "/payments?student_id=" + studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("financing service returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var payments []FinancingPayment
+	if err := json.NewDecoder(resp.Body).Decode(&payments); err != nil {
+		return []pgtype.Numeric{}, nil
+	}
+
+	amounts := make([]pgtype.Numeric, len(payments))
+	for i, payment := range payments {
+		amounts[i] = payment.Amount
+	}
+	return amounts, nil
 }

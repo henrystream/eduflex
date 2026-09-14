@@ -78,6 +78,18 @@ func NewRouter(cfg config.Config) *chi.Mux {
 		r.With(auth.RequireRoles("admin", "school", "student")).Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			forward(w, r, cfg.StudentURL)
 		})
+
+		r.With(auth.RequireRoles("admin", "school", "student")).Post("/{id}/payments", func(w http.ResponseWriter, r *http.Request) {
+			r.URL.Path = "/payments"
+			forward(w, r, cfg.FinancingURL)
+		})
+		r.With(auth.RequireRoles("admin", "school", "student")).Get("/{id}/payments", func(w http.ResponseWriter, r *http.Request) {
+			query := r.URL.Query()
+			query.Set("student_id", chi.URLParam(r, "id"))
+			r.URL.Path = "/payments"
+			r.URL.RawQuery = query.Encode()
+			forward(w, r, cfg.FinancingURL)
+		})
 	})
 
 	// ENROLLMENT ROUTES
@@ -93,10 +105,10 @@ func NewRouter(cfg config.Config) *chi.Mux {
 	// PAYMENT ROUTES
 	r.Route("/payments", func(r chi.Router) {
 		r.With(auth.RequireRoles("admin", "school", "student")).Post("/", func(w http.ResponseWriter, r *http.Request) {
-			forward(w, r, cfg.StudentURL)
+			forward(w, r, cfg.FinancingURL)
 		})
 		r.With(auth.RequireRoles("admin", "school", "student")).Get("/", func(w http.ResponseWriter, r *http.Request) {
-			forward(w, r, cfg.StudentURL)
+			forward(w, r, cfg.FinancingURL)
 		})
 	})
 

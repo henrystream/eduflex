@@ -4,30 +4,15 @@ import (
 	"context"
 	"errors"
 
-	db "github.com/henrystream/eduflex/student-service/db/sqlc"
-	"github.com/henrystream/eduflex/student-service/internal/events"
-	"github.com/henrystream/eduflex/student-service/internal/repository"
+	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
+	"github.com/henrystream/eduflex/financing-service/internal/events"
+	"github.com/henrystream/eduflex/financing-service/internal/repository"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type PaymentService struct {
 	repo   *repository.PaymentRepository
 	ledger LedgerClient
-}
-
-type LedgerClient interface {
-	CreateEntry(req LedgerEntryRequest) error
-}
-
-type LedgerEntryRequest struct {
-	EventType     string             `json:"event_type"`
-	EventID       pgtype.UUID        `json:"event_id"`
-	SourceService string             `json:"source_service"`
-	DebitAccount  string             `json:"debit_account"`
-	CreditAccount string             `json:"credit_account"`
-	Amount        pgtype.Numeric     `json:"amount"`
-	Currency      string             `json:"currency"`
-	OccurredAt    pgtype.Timestamptz `json:"occurred_at"`
 }
 
 func NewPaymentService(r *repository.PaymentRepository, ledger ...LedgerClient) *PaymentService {
@@ -46,7 +31,7 @@ type CreatePaymentRequest struct {
 }
 
 func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentRequest) (db.StudentPayment, error) {
-	if req.InstallmentID.String() == "" || !req.Amount.Valid {
+	if !req.InstallmentID.Valid || !req.Amount.Valid {
 		return db.StudentPayment{}, errors.New("installment_id and amount required")
 	}
 
@@ -64,7 +49,7 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 		_ = s.ledger.CreateEntry(LedgerEntryRequest{
 			EventType:     "STUDENT_PAYMENT",
 			EventID:       payment.ID,
-			SourceService: "student-service",
+			SourceService: "financing-service",
 			DebitAccount:  "Cash - Bank",
 			CreditAccount: "Accounts Receivable - Student",
 			Amount:        payment.Amount,
@@ -76,17 +61,13 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 		})
 	}
 
-	var eventClient events.EventClient
-
-	pubRequest := events.PublishEventRequest{
-		EventType:     "STUDENT_PAYMENT_CREATED",
-		SourceService: "student-service",
-		AggregateID:   payment.ID,
-		OccurredAt:    pgtype.Timestamptz{Time: payment.PaidAt.Time, Valid: true},
-		Payload:       payment,
-	}
-
-	eventClient.Publish(pubRequest.EventType, pubRequest.SourceService, pubRequest.AggregateID, pubRequest.OccurredAt, pubRequest.Payload)
+	events.NewEventClient("http://event-service:8080", "financing-service").Publish(
+		"STUDENT_PAYMENT_CREATED",
+		"financing-service",
+		payment.ID,
+		pgtype.Timestamptz{Time: payment.PaidAt.Time, Valid: payment.PaidAt.Valid},
+		payment,
+	)
 
 	return payment, nil
 }

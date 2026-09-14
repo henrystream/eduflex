@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/henrystream/eduflex/student-service/internal/service"
+	"github.com/henrystream/eduflex/financing-service/internal/service"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -33,11 +33,13 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PaymentHandler) ListPaymentsByStudent(w http.ResponseWriter, r *http.Request) {
-	var suuid pgtype.UUID
-	studentID := r.URL.Query().Get("student_id")
-	suuid.Scan(studentID)
+	var studentID pgtype.UUID
+	if err := studentID.Scan(r.URL.Query().Get("student_id")); err != nil {
+		http.Error(w, "invalid student_id", http.StatusBadRequest)
+		return
+	}
 
-	payments, err := h.svc.ListPaymentsByStudent(r.Context(), suuid)
+	payments, err := h.svc.ListPaymentsByStudent(r.Context(), studentID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

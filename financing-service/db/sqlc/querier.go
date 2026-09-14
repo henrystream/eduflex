@@ -13,9 +13,11 @@ import (
 type Querier interface {
 	CreateAgreement(ctx context.Context, arg CreateAgreementParams) (FinancingAgreement, error)
 	CreateInstallment(ctx context.Context, arg CreateInstallmentParams) (MonthlyInstallment, error)
+	CreatePayment(ctx context.Context, arg CreatePaymentParams) (StudentPayment, error)
 	GetAgreement(ctx context.Context, id pgtype.UUID) (FinancingAgreement, error)
 	ListAgreementsByStudent(ctx context.Context, studentID pgtype.UUID) ([]FinancingAgreement, error)
 	ListInstallments(ctx context.Context, financingID pgtype.UUID) ([]MonthlyInstallment, error)
+	ListPaymentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentPayment, error)
 	UpdateAgreementStatus(ctx context.Context, arg UpdateAgreementStatusParams) (FinancingAgreement, error)
 }
 

@@ -21,6 +21,11 @@ type Installment struct {
 	Financing string `json:"financing_id"`
 }
 
+type Payment struct {
+	ID     string `json:"id"`
+	Amount string `json:"amount"`
+}
+
 func (c *FinancingClient) ListInstallments(financingID string) ([]Installment, error) {
 	resp, err := http.Get(c.BaseURL + "/installments?financing_id=" + financingID)
 	if err != nil {
@@ -31,4 +36,16 @@ func (c *FinancingClient) ListInstallments(financingID string) ([]Installment, e
 	var installments []Installment
 	err = json.NewDecoder(resp.Body).Decode(&installments)
 	return installments, err
+}
+
+func (c *FinancingClient) ListPaymentsByStudent(studentID string) ([]Payment, error) {
+	resp, err := http.Get(c.BaseURL + "/payments?student_id=" + studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var payments []Payment
+	err = json.NewDecoder(resp.Body).Decode(&payments)
+	return payments, err
 }

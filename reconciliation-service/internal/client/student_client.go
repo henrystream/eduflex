@@ -5,12 +5,12 @@ import (
 	"net/http"
 )
 
-type StudentClient struct {
+type FinancingClient struct {
 	BaseURL string
 }
 
-func NewStudentClient(url string) *StudentClient {
-	return &StudentClient{BaseURL: url}
+func NewFinancingClient(url string) *FinancingClient {
+	return &FinancingClient{BaseURL: url}
 }
 
 type StudentPayment struct {
@@ -21,7 +21,7 @@ type StudentPayment struct {
 	Reference string `json:"reference"`
 }
 
-func (c *StudentClient) ListPaymentsByStudent(studentID string) ([]StudentPayment, error) {
+func (c *FinancingClient) ListPaymentsByStudent(studentID string) ([]StudentPayment, error) {
 	resp, err := http.Get(c.BaseURL + "/payments?student_id=" + studentID)
 	if err != nil {
 		return nil, err

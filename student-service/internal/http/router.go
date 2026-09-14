@@ -9,7 +9,6 @@ import (
 func NewRouter(
 	studentSvc *service.StudentService,
 	enrollmentSvc *service.EnrollmentService,
-	paymentSvc *service.PaymentService,
 ) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -28,12 +27,6 @@ func NewRouter(
 		r.Post("/", enrollmentHandler.CreateEnrollment)
 		r.Get("/", enrollmentHandler.ListEnrollmentsByStudent)
 
-	})
-
-	paymentHandler := NewPaymentHandler(paymentSvc)
-	r.Route("/payments", func(r chi.Router) {
-		r.Post("/", paymentHandler.CreatePayment)
-		r.Get("/", paymentHandler.ListPaymentsByStudent)
 	})
 
 	return r

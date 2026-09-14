@@ -103,29 +103,3 @@ func (c *StudentClient) ListPaymentsBySchool(schoolID string) ([]pgtype.Numeric,
 
 	return amounts, nil
 }
-
-func (c *StudentClient) ListPaymentsByStudent(studentID string) ([]pgtype.Numeric, error) {
-	resp, err := http.Get(c.BaseURL + "/payments?student_id=" + studentID)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("student service returned status %d", resp.StatusCode)
-	}
-
-	var payments []Payment
-	err = json.NewDecoder(resp.Body).Decode(&payments)
-	if err != nil {
-		// Try to parse as empty array if response is null or empty
-		return []pgtype.Numeric{}, nil
-	}
-
-	amounts := make([]pgtype.Numeric, len(payments))
-	for i, p := range payments {
-		amounts[i] = p.Amount
-	}
-
-	return amounts, nil
-}

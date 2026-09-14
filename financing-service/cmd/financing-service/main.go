@@ -68,10 +68,12 @@ func main() {
 
 	agreementRepo := repository.NewAgreementRepository(queries)
 	installmentRepo := repository.NewInstallmentRepository(queries)
+	paymentRepo := repository.NewPaymentRepository(queries)
 	installmentSvc := service.NewInstallmentService(installmentRepo, ledger)
+	paymentSvc := service.NewPaymentService(paymentRepo, ledger)
 	agreementSvc := service.NewAgreementService(agreementRepo, installmentSvc, eventClient, fraudClient, ledger)
 
-	router := apphttp.NewRouter(agreementSvc, installmentSvc)
+	router := apphttp.NewRouter(agreementSvc, installmentSvc, paymentSvc)
 
 	log.Printf("financing-service listening on :%s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {

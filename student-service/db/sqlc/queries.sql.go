@@ -43,38 +43,6 @@ func (q *Queries) CreateEnrollment(ctx context.Context, arg CreateEnrollmentPara
 	return i, err
 }
 
-const createPayment = `-- name: CreatePayment :one
-INSERT INTO student_payments (installment_id, amount, payment_method, transaction_reference)
-VALUES ($1, $2, $3, $4)
-RETURNING id, installment_id, amount, paid_at, payment_method, transaction_reference
-`
-
-type CreatePaymentParams struct {
-	InstallmentID        pgtype.UUID    `json:"installment_id"`
-	Amount               pgtype.Numeric `json:"amount"`
-	PaymentMethod        pgtype.Text    `json:"payment_method"`
-	TransactionReference pgtype.Text    `json:"transaction_reference"`
-}
-
-func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (StudentPayment, error) {
-	row := q.db.QueryRow(ctx, createPayment,
-		arg.InstallmentID,
-		arg.Amount,
-		arg.PaymentMethod,
-		arg.TransactionReference,
-	)
-	var i StudentPayment
-	err := row.Scan(
-		&i.ID,
-		&i.InstallmentID,
-		&i.Amount,
-		&i.PaidAt,
-		&i.PaymentMethod,
-		&i.TransactionReference,
-	)
-	return i, err
-}
-
 const createStudent = `-- name: CreateStudent :one
 INSERT INTO students (first_name, last_name, date_of_birth, email, phone)
 VALUES ($1, $2, $3, $4, $5)
@@ -167,43 +135,6 @@ func (q *Queries) ListEnrollmentsByStudent(ctx context.Context, studentID pgtype
 			&i.EnrollmentDate,
 			&i.Status,
 			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listPaymentsByStudent = `-- name: ListPaymentsByStudent :many
-SELECT p.id, p.installment_id, p.amount, p.paid_at, p.payment_method, p.transaction_reference
-FROM student_payments p
-JOIN monthly_installments mi ON mi.id = p.installment_id
-WHERE mi.financing_id IN (
-    SELECT id FROM financing_agreements WHERE student_id = $1
-)
-ORDER BY p.paid_at DESC
-`
-
-func (q *Queries) ListPaymentsByStudent(ctx context.Context, studentID pgtype.UUID) ([]StudentPayment, error) {
-	rows, err := q.db.Query(ctx, listPaymentsByStudent, studentID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []StudentPayment
-	for rows.Next() {
-		var i StudentPayment
-		if err := rows.Scan(
-			&i.ID,
-			&i.InstallmentID,
-			&i.Amount,
-			&i.PaidAt,
-			&i.PaymentMethod,
-			&i.TransactionReference,
 		); err != nil {
 			return nil, err
 		}

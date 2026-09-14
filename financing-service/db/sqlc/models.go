@@ -31,3 +31,12 @@ type MonthlyInstallment struct {
 	Status            string             `json:"status"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 }
+
+type StudentPayment struct {
+	ID                   pgtype.UUID      `json:"id"`
+	InstallmentID        pgtype.UUID      `json:"installment_id"`
+	Amount               pgtype.Numeric   `json:"amount"`
+	PaidAt               pgtype.Timestamp `json:"paid_at"`
+	PaymentMethod        pgtype.Text      `json:"payment_method"`
+	TransactionReference pgtype.Text      `json:"transaction_reference"`
+}

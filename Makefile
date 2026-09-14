@@ -19,7 +19,7 @@
 #	docker run --rm -v "$(CURDIR)/student-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5434/studentdb?sslmode=disable" down -y
 #	docker run --rm -v "$(CURDIR)/student-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5434/studentdb?sslmode=disable" up
 #	docker run --rm -v "$(CURDIR)/auth-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:password@host.docker.internal:5435/authdb?sslmode=disable" up
-#	docker run --rm -v "$(CURDIR)/financing-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5436/financingdb?sslmode=disable" up
+#	docker run --rm -v "$(CURDIR)/financing-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5436/financingdb?sslmode=disable" force 3
 ##	docker run --rm -v "$(CURDIR)/loan-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5437/loandb?sslmode=disable" force 2
 #	docker run --rm -v "$(CURDIR)/loan-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5437/loandb?sslmode=disable" up
 #	docker run --rm -v "$(CURDIR)/ledger-service/db:/db" migrate/migrate:v4.17.0 -path=/db/migrations -database "postgres://postgres:postgres@host.docker.internal:5438/ledgerdb?sslmode=disable" force 2

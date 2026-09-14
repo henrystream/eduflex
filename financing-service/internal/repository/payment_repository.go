@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	db "github.com/henrystream/eduflex/student-service/db/sqlc"
+	db "github.com/henrystream/eduflex/financing-service/db/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
